@@ -46,7 +46,7 @@ export const getUserPosts = async (req, res) => {
   }
 };
 
-/* UPDATE */
+/* UPDATE LIKES */
 export const likePost = async (req, res) => {
   try {
     const { id } = req.params;
@@ -67,6 +67,67 @@ export const likePost = async (req, res) => {
     );
 
     res.status(200).json(updatedPost);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+/* UPDATE COMMENTS */
+export const addComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, text } = req.body;
+    const post = await Post.findById(id);
+
+    const newComment = {
+      userId,
+      text,
+    };
+
+    post.comments.push(newComment);
+    await post.save();
+
+    res.status(200).json(post);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+export const deleteComment = async (req, res) => {
+  try {
+    const { postId, commentId } = req.params;
+    const post = await Post.findById(postId);
+
+    const commentIndex = post.comments.findIndex(
+      (comment) => comment._id == commentId
+    );
+
+    if (commentIndex === -1) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    post.comments.splice(commentIndex, 1);
+    await post.save();
+
+    res.status(200).json(post);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+/* DELETE POST */
+export const deletePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const post = await Post.findById(id);
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    await post.remove();
+
+    res.status(200).json({ message: "Post deleted successfully" });
   } catch (err) {
     res.status(404).json({ message: err.message });
   }
